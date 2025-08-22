@@ -3,9 +3,11 @@ import { $, round1, round3, svgDownload } from "./utils.js";
 import { pointsFromLA } from "./model.js";
 
 export function drawCross(model, svg) {
+  if (!svg) return;
   while (svg.firstChild) svg.removeChild(svg.firstChild);
   const vbw = svg.viewBox.baseVal.width || 700, vbh = svg.viewBox.baseVal.height || 360, pad = 24;
 
+  // grid
   for (let x = pad; x <= vbw - pad; x += 50) {
     const l = document.createElementNS(svg.namespaceURI, "line");
     l.setAttribute("x1", x); l.setAttribute("y1", pad); l.setAttribute("x2", x); l.setAttribute("y2", vbh - pad);
@@ -46,6 +48,7 @@ export function drawCross(model, svg) {
 }
 
 export function drawFlat(model, svg) {
+  if (!svg) return;
   while (svg.firstChild) svg.removeChild(svg.firstChild);
   const vb = svg.viewBox.baseVal; const VBW = vb.width || 820; const VBH = vb.height || 360; const pad = 24;
 
@@ -67,6 +70,7 @@ export function drawFlat(model, svg) {
 }
 
 export function renderWidthInfo(model, el) {
+  if (!el) return;
   const parts = model.elements.map(e => (e.type === "hem" ? `${e.name}:15 (завальцовка)` : `${e.name}:${round1(e.L)}`)).join(" · ");
   const bendList = model.blPos.map((v, i) => `${model.bendNames[i]}=${round1(v)} мм`).join(" · ");
   el.innerHTML = [
@@ -77,6 +81,7 @@ export function renderWidthInfo(model, el) {
 }
 
 export function buildLayoutTable(model, el) {
+  if (!el) return;
   const lines = [];
   lines.push("Метка Позиция ЛГ (мм от нижней кромки)    Примечание");
   lines.push("----- -------------------------------      ----------");
@@ -91,8 +96,8 @@ export function buildLayoutTable(model, el) {
   el.textContent = lines.join("\n");
 }
 
-export function exportProfileSVG() { svgDownload("profile.svg", $("#cross")); }
-export function exportFlatSVG() { svgDownload("strip.svg", $("#flat")); }
+export function exportProfileSVG() { const el = $("#cross"); if (el) svgDownload("profile.svg", el); }
+export function exportFlatSVG() { const el = $("#flat"); if (el) svgDownload("strip.svg", el); }
 
 export function exportProductionSVG(model, report) {
   if (!report) { alert("Заполните все параметры цены и выберите категорию"); return; }
@@ -107,10 +112,9 @@ export function exportProductionSVG(model, report) {
   title.setAttribute("font-size", "16"); title.setAttribute("font-weight", "700");
   title.textContent = "Чертёж: профиль, раскрой и спецификация"; svg.appendChild(title);
 
-  // Сечение
+  // Профиль
   const area1 = { x: pad, y: pad + 28, w: 700, h: 340 };
   const border1 = document.createElementNS(svgNS, "rect");
-  Object.assign(border1, { });
   border1.setAttribute("x", area1.x); border1.setAttribute("y", area1.y);
   border1.setAttribute("width", area1.w); border1.setAttribute("height", area1.h);
   border1.setAttribute("fill", "#ffffff"); border1.setAttribute("stroke", "#1a2c5a"); border1.setAttribute("stroke-width", "1");
@@ -120,7 +124,7 @@ export function exportProductionSVG(model, report) {
   const minX = Math.min(...rawPts.map(p => p.x)), maxX = Math.max(...rawPts.map(p => p.x));
   const minY = Math.min(...rawPts.map(p => p.y)), maxY = Math.max(...rawPts.map(p => p.y));
   const w1 = Math.max(1, maxX - minX), h1 = Math.max(1, maxY - minY);
-  const s1 = Math.min((area1.w - 2 * 20) / w1, (area1.h - 2 * 20) / h1);
+  const s1 = Math.min((area1.w - 40) / w1, (area1.h - 40) / h1);
   const offX1 = area1.x + (area1.w - w1 * s1) / 2 - minX * s1;
   const offY1 = area1.y + (area1.h - h1 * s1) / 2 - minY * s1;
   const pts1 = rawPts.map(p => ({ x: p.x * s1 + offX1, y: p.y * s1 + offY1 }));
@@ -144,7 +148,7 @@ export function exportProductionSVG(model, report) {
     }
   }
 
-  // Раскрой
+  // Полоса
   const area2 = { x: pad + area1.w + 20, y: area1.y, w: w - (pad + area1.w + 20) - pad, h: area1.h };
   const border2 = document.createElementNS(svgNS, "rect");
   border2.setAttribute("x", area2.x); border2.setAttribute("y", area2.y);
@@ -153,7 +157,7 @@ export function exportProductionSVG(model, report) {
   svg.appendChild(border2);
 
   const lenX = 2000, widY = Math.max(1, model.width);
-  const s2 = Math.min((area2.w - 2 * 20) / lenX, (area2.h - 2 * 20) / widY);
+  const s2 = Math.min((area2.w - 40) / lenX, (area2.h - 40) / widY);
   const left2 = area2.x + (area2.w - lenX * s2) / 2;
   const top2 = area2.y + (area2.h - widY * s2) / 2;
 
@@ -172,11 +176,11 @@ export function exportProductionSVG(model, report) {
   const area3 = { x: pad, y: area1.y + area1.h + 20, w: w - 2 * pad, h: h - (area1.y + area1.h + 20) - pad };
   const rows = [
     ["Параметр", "Значение"],
+    ["Ширина Σ", `${round1(report.widthSigma)} мм`],
     ["Цена/шт", `${report.pricePerItem} руб. (кат. ${report.category})`],
     ["Длина изделия", report.lengthKind],
     ["Покрытие", report.coating],
     ["Цвет", report.colorLabel || "—"],
-    ["Ширина Σ", `${round1(report.widthSigma)} мм`],
     ["Кол-во", `${report.qty} шт`],
     ["Ширина листа", `${report.sheetWidth} мм`],
     ["Изделий с листа", `${report.itemsPerSheet} шт`],
@@ -184,11 +188,11 @@ export function exportProductionSVG(model, report) {
     ["Использование последнего листа", `${round1(report.lastSheetUsed)} мм`],
     ["Остаток последнего", `${round1(report.leftoverOnLast)} мм`],
     ["Мусор", `${round1(report.leftoverWaste)} мм`],
-    ["Лист(ы) на нестандарт", `${round3(report.sheetsForNonStd)} шт`],
     ...(report.stdPlanks?.qty?.length
       ? [["Стандартные планки из остатка", `${round3(report.stdPlanksSheets)} лист.`], ...report.stdPlanks.qty.map((q, i) => [report.stdPlanks.names[i] || `Планка ${i + 1}`, `${q} шт`])]
       : []),
-    ["Всего листов", `${round3(report.sheetsTotal)} шт`],
+    ["Листы на нестандарт", `${round3(report.sheetsForNonStd)} шт`],
+    ["Всего листов", `${round3(report.sheetsTotal)} шт`]
   ];
 
   const rowH = 26, colW = [220, area3.w - 220];
