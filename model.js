@@ -1,11 +1,9 @@
 // model.js
-import { $, round1 } from "./utils.js";
+import { $ } from "./utils.js";
 
 const HEM_SIZE = 15;
-
-// Базовые массивы профиля
-let Ls = [30, 100, 20, 15]; // мм
-let As = [-90, -90, 0];     // градусы поворота
+let Ls = [30, 100, 20, 15];
+let As = [-90, -90, 0];
 const listeners = new Set();
 
 export function getLA() { return { Ls: [...Ls], As: [...As] }; }
@@ -31,7 +29,7 @@ function emit() { listeners.forEach(cb => cb(buildModel())); }
 
 export function pointsFromLA(Larr, Aarr, origin = { x: 0, y: 0 }) {
   const pts = [{ x: origin.x, y: origin.y }];
-  let ang = -90; // вертикаль вверх
+  let ang = -90;
   for (let i = 0; i < Larr.length; i++) {
     const L = Number(Larr[i]) || 0;
     const p = pts[pts.length - 1];
@@ -106,5 +104,6 @@ export function renderProfileList(container) {
     tb.appendChild(tr);
   }
   container.appendChild(table);
-  $("#countInfo").textContent = `Полок: ${model.Ls.length} | Линий гиба: ${Math.max(0, model.Ls.length - 1)}`;
+  const countInfo = document.getElementById("countInfo");
+  if (countInfo) countInfo.textContent = `Полок: ${model.Ls.length} | Линий гиба: ${Math.max(0, model.Ls.length - 1)}`;
 }
