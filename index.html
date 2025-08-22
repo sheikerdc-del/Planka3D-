@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Планка — профиль, стоимость, 3D (ES Modules)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg:#0b132b; --card:#111833; --muted:#aeb6c7; --line:#2a3558; --text:#f3f4f7; --accent:#5bc0be; --ink:#0b1020; --paper:#fff;
+    }
+    html, body { height:100%; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    h1 { font-size:22px; font-weight:800; margin:16px; }
+    .container { display:flex; flex-direction:column; gap:16px; padding:0 16px 24px; max-width:1400px; margin:0 auto; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+    .section-title { font-weight:800; font-size:16px; margin:4px 0 10px; }
+    .small { font-size:13px; color:var(--muted); }
+    .muted { color:var(--muted); }
+    .row { display:flex; gap:12px; flex-wrap:wrap; width:100%; }
+    .field { display:flex; flex-direction:column; gap:6px; flex:1 1 220px; min-width:220px; }
+    label { font-size:13px; color:var(--muted); font-weight:700; }
+    input[type=number], select { width:100%; box-sizing:border-box; background:#0f1533; color:#f3f4f7; border:1px solid #3a4780; border-radius:10px; padding:12px; font-size:14px; outline:none; }
+    input[type=number]:focus, select:focus { border-color:#7aa2ff; box-shadow:0 0 0 3px rgba(122,162,255,.18); }
+    .checkbox { display:flex; align-items:center; gap:8px; }
+    .btns { display:flex; gap:8px; flex-wrap:wrap; }
+    button { appearance:none; border:1px solid #34406d; background:#10173a; color:#f3f4f7; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:800; font-size:14px; }
+    button.primary { background:linear-gradient(180deg,#203061,#0f1a3a); border-color:#33406b; }
+    button.danger { background:linear-gradient(180deg,#4b1c1c,#2a1111); border-color:#6b3333; }
+    svg.canvas, svg.grid { width:100%; height:360px; background:#0d1430; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+    #viewer3d { width:100%; height:480px; border:1px solid var(--line); border-radius:10px; background:#0d1430; }
+    table { width:100%; border-collapse:collapse; table-layout:fixed; }
+    th, td { border-bottom:1px solid var(--line); padding:8px; font-size:13px; color:#eef1ff; }
+    th { text-align:left; color:#fff; font-weight:800; }
+    td input[type=number] { width:100%; padding:8px 10px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13px; white-space: pre; }
+    @media (max-width: 720px) { .field { min-width: 160px; } }
+    @media print {
+      body { background:var(--paper); color:var(--ink); }
+      .card { background:var(--paper) !important; border-color:#ccc !important; }
+      svg.canvas, svg.grid, #viewer3d { background:#fff !important; }
+      button { display:none; }
+      .small, label, td, th { color:#000 !important; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Планка — единая форма (профиль + стоимость + 3D)</h1>
+  <div class="container">
+
+    <div class="card">
+      <div class="section-title">Редактор по точкам (ЛКМ — добавить/перетащить; ПКМ — удалить последнюю)</div>
+      <div class="small">«Применить к профилю» пересчитает длины и углы; «Импорт из профиля» создаст точки из текущего L/∠.</div>
+      <svg id="pointCanvas" class="canvas" viewBox="0 0 800 360"></svg>
+      <div class="btns" style="margin-top:8px;">
+        <button id="applyFromPoints" class="primary">Применить к профилю</button>
+        <button id="importToPoints">Импорт из профиля</button>
+        <button id="clearPoints" class="danger">Очистить</button>
+      </div>
+      <div class="section-title" style="margin-top:10px;">Длины и углы (из редактора)</div>
+      <table>
+        <thead><tr><th style="width:40px">#</th><th>Длина, мм</th><th>Угол, °</th></tr></thead>
+        <tbody id="pointsTable"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Параметры профиля</div>
+      <div class="row">
+        <div class="field">
+          <label>Минимальная длина полки, мм</label>
+          <input type="number" id="minFlange" value="8" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>Сторона завальцовки</label>
+          <select id="hemSide" disabled>
+            <option value="bottom">Снизу (от нижней кромки)</option>
+            <option value="top">Сверху (от верхней кромки)</option>
+          </select>
+        </div>
+      </div>
+      <div class="checkbox" style="margin-top:8px;">
+        <input type="checkbox" id="useHem">
+        <label for="useHem">Использовать завальцовку 15 мм</label>
+      </div>
+      <div class="btns" style="margin-top:8px;">
+        <button id="recalc" class="primary">Пересчитать</button>
+        <button id="addFlange">Добавить полку</button>
+        <button id="removeFlange" class="danger">Удалить последнюю</button>
+        <span class="small" id="countInfo" style="align-self:center;"></span>
+      </div>
+      <div id="warnings" class="small" style="margin-top:6px;"></div>
+
+      <div class="section-title" style="margin-top:14px;">Длины и углы (профиль)</div>
+      <div id="profileList"></div>
+    </div>
+
+    <div class="card" id="priceCard">
+      <div class="section-title">Стоимость</div>
+      <div class="small">Ширина изделия берётся из текущего профиля (Σ, включая завальцовку при включении).</div>
+
+      <div class="row">
+        <div class="field">
+          <label>Ширина изделия, мм (из профиля)</label>
+          <input type="number" id="shirina" readonly>
+        </div>
+        <div class="field">
+          <label>Длина изделия</label>
+          <select id="dlina">
+            <option value="0">— выберите —</option>
+            <option value="do1250">До 1250 мм</option>
+            <option value="bolee1250">От 1250 до 2000 мм</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Покрытие</label>
+          <select id="pokritie">
+            <option value="0">Выберите покрытие</option>
+            <option value="1">РЕ РФ 0.45</option>
+            <option value="2">VikingMP Д 0.45</option>
+            <option value="3">Purman 0.50</option>
+            <option value="4">VikingMP E 0.50</option>
+            <option value="5">Cloudy 0.50</option>
+            <option value="9">Puretan 0.50</option>
+            <option value="10">Ecosteel 0.50</option>
+            <option value="11">Ecosteel Matt 0.50</option>
+            <option value="12">Ecosteel Texture 0.50</option>
+            <option value="13">Ecosteel Matt/Texture двусторонний 0.50</option>
+            <option value="14">Valori 0.50</option>
+            <option value="15">PE Norman 0.50</option>
+            <option value="16">Viking 0.45</option>
+            <option value="17">PE двусторонний 0.45</option>
+            <option value="18">Agneta 0.50</option>
+            <option value="19">GreenCoat Pural Matt BT 0.50</option>
+            <option value="20">GreenCoat Pural BT 0.50</option>
+            <option value="21">Quarzit Pro Matt 0.50</option>
+            <option value="22">Quarzit 0.50</option>
+            <option value="23">Quarzit lite 0.50</option>
+            <option value="24">Velur 0.50</option>
+            <option value="25">PE Atlas 0.50</option>
+            <option value="27">Print Elite двусторонний</option>
+            <option value="28">Print Elite</option>
+            <option value="29">Print Premium двусторонний</option>
+            <option value="30">Print Premium</option>
+            <option value="33">Satin Matt 0.50</option>
+            <option value="34">Rooftop Matte 0.50</option>
+            <option value="35">Drap 0.45</option>
+            <option value="36">РЕ Satin 0.50</option>
+            <option value="37">PE SSAB 0.50</option>
+            <option value="38">PE Matt Rough 0.50</option>
+            <option value="39">GreenCoat Crown BT 0.50</option>
+            <option value="40">PE Matt двусторонний 0.40</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Цвет</label>
+          <select id="color">
+            <option data-filter="0" value="0">Выберите цвет</option>
+
+            <option data-filter="1" value="1592.5" data-cvet="9003" data-dlina="155,205" data-plankaname="Отлив 100 (155),Отлив 150 (205)">9003</option>
+            <option data-filter="1" value="1592.5" data-cvet="6005" data-dlina="625,180,315,250" data-plankaname="МЧ ендова,МЧ карниз,МЧ конек/накладка,МЧ примык/ветровик">6005</option>
+            <option data-filter="1" value="1592.5" data-cvet="8017" data-dlina="625,180,315,250" data-plankaname="МЧ ендова,МЧ карниз,МЧ конек/накладка,МЧ примык/ветровик">8017</option>
+            <option data-filter="1" value="1592.5" data-cvet="3005" data-dlina="625,180,315,250" data-plankaname="МЧ ендова,МЧ карниз,МЧ конек/накладка,МЧ примык/ветровик">3005</option>
+            <option data-filter="1" value="1592.5" data-cvet="3009" data-dlina="180,90,210" data-plankaname="МК капельник,МК примыкание,МК ветровик">3009</option>
+            <option data-filter="1" value="1592.5" data-cvet="7024" data-dlina="180,90,210" data-plankaname="МК капельник,МК примыкание,МК ветровик">7024</option>
+            <option data-filter="1" value="1592.5" data-cvet="5005" data-dlina="180,90,210" data-plankaname="МК капельник,МК примыкание,МК ветровик">5005</option>
+            <option data-filter="1" value="1592.5" data-cvet="другой">другой</option>
+
+            <option data-filter="2" value="1887.5" data-cvet="любой">любой</option>
+            <option data-filter="3" value="2655" data-cvet="любой">любой</option>
+            <option data-filter="4" value="2237.5" data-cvet="любой">любой</option>
+            <option data-filter="5" value="2992.5" data-cvet="любой">любой</option>
+            <option data-filter="9" value="2135" data-cvet="любой">любой</option>
+            <option data-filter="10" value="2082.5" data-cvet="любой">любой</option>
+            <option data-filter="11" value="2160" data-cvet="любой">любой</option>
+            <option data-filter="12" value="2225" data-cvet="любой">любой</option>
+            <option data-filter="13" value="2562.5" data-cvet="любой">любой</option>
+            <option data-filter="14" value="1965" data-cvet="любой">любой</option>
+            <option data-filter="15" value="1757.5" data-cvet="любой">любой</option>
+            <option data-filter="16" value="1640" data-cvet="любой">любой</option>
+            <option data-filter="17" value="1697.5" data-cvet="любой">любой</option>
+            <option data-filter="18" value="2992.5" data-cvet="любой">любой</option>
+            <option data-filter="19" value="3395" data-cvet="любой">любой</option>
+            <option data-filter="20" value="3395" data-cvet="любой">любой</option>
+            <option data-filter="21" value="2422.5" data-cvet="любой">любой</option>
+            <option data-filter="22" value="2422.5" data-cvet="любой">любой</option>
+            <option data-filter="23" value="2350" data-cvet="любой">любой</option>
+            <option data-filter="24" value="2350" data-cvet="любой">любой</option>
+            <option data-filter="25" value="2350" data-cvet="любой">любой</option>
+            <option data-filter="27" value="2802.5" data-cvet="любой">любой</option>
+            <option data-filter="28" value="2360" data-cvet="любой">любой</option>
+            <option data-filter="29" value="2680" data-cvet="любой">любой</option>
+            <option data-filter="30" value="2242.5" data-cvet="любой">любой</option>
+            <option data-filter="33" value="2047.5" data-cvet="любой">любой</option>
+            <option data-filter="34" value="2535" data-cvet="любой">любой</option>
+            <option data-filter="35" value="1860" data-cvet="любой">любой</option>
+            <option data-filter="36" value="1757.5" data-cvet="любой">любой</option>
+            <option data-filter="37" value="4322.5" data-cvet="любой">любой</option>
+            <option data-filter="38" value="4490" data-cvet="любой">любой</option>
+            <option data-filter="39" value="3050" data-cvet="любой">любой</option>
+            <option data-filter="40" value="1722.5" data-cvet="любой">любой</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Количество изделий, шт</label>
+          <input type="number" id="kolichestvo" min="1" step="1" value="1">
+        </div>
+      </div>
+
+      <div class="small" style="margin-top:6px;">Категория цены клиента</div>
+      <div class="btns" id="priceCats">
+        <button type="button" class="btn" data-mult="2.8" data-name="11">11</button>
+        <button type="button" class="btn" data-mult="2.7" data-name="12">12</button>
+        <button type="button" class="btn" data-mult="2.5" data-name="21">21</button>
+        <button type="button" class="btn" data-mult="2.4" data-name="22">22</button>
+        <button type="button" class="btn" data-mult="2.1" data-name="31">31</button>
+        <button type="button" class="btn" data-mult="1.57" data-name="32">32</button>
+        <button type="button" class="btn" data-mult="1.35" data-name="S">S</button>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div class="section-title">Цена за изделие</div>
+        <div id="cost" style="font-size:20px;font-weight:800;">—</div>
+      </div>
+      <div id="supplyInfo" class="small" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">2D профиль и полоса</div>
+      <div class="row">
+        <div class="field" style="flex:1 1 360px; min-width:360px;">
+          <svg id="cross" class="grid" viewBox="0 0 700 360"></svg>
+        </div>
+        <div class="field" style="flex:1 1 360px; min-width:360px;">
+          <svg id="flat" class="grid" viewBox="0 0 820 360"></svg>
+        </div>
+      </div>
+      <div class="btns" style="margin-top:8px;">
+        <button id="exportCross">Экспорт SVG (профиль)</button>
+        <button id="exportFlat">Экспорт SVG (полоса)</button>
+        <button id="exportProd" class="primary">Экспорт SVG (производство: профиль+раскрой+таблица)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Данные по ширине и разметке</div>
+      <div id="widthInfo"></div>
+      <div class="section-title" style="margin-top:10px;">Разметка (линии гиба)</div>
+      <div id="layoutTable" class="mono"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">3D предпросмотр</div>
+      <div id="viewer3d"></div>
+    </div>
+
+  </div>
+
+  <!-- Модуль приложения -->
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
