@@ -1,82 +1,74 @@
 // main.js
 import { $, round1 } from "./utils.js";
-import { buildModel, getLA, setLA, addFlange, removeFlange, renderProfileList, pointsFromLA, onChange } from "./model.js";
-import { drawCross, drawFlat, renderWidthInfo, buildLayoutTable, exportFlatSVG, exportProfileSVG, exportProductionSVG } from "./svgRender.js";
+import { buildModel, onChange, renderProfileList, addFlange, removeFlange, pointsFromLA, getLA } from "./model.js";
+import { drawCross, drawFlat, renderWidthInfo, buildLayoutTable, exportProfileSVG, exportFlatSVG, exportProductionSVG } from "./svgRender.js";
+import { initViewer, updateProfile3D } from "./viewer3d.js";
 import { initPointsEditor, applyPointsToProfile, importProfileToPoints, clearPoints } from "./pointsEditor.js";
 import { createPricing } from "./pricing.js";
-import { initViewer, updateProfile3D } from "./viewer3d.js";
 
 let pricingCtrl = null;
+
+function bindUI() {
+  const on = (id, evt, handler) => {
+    const el = $(id);
+    if (!el) { console.warn(`[UI] Не найден #${id}`); return; }
+    el.addEventListener(evt, handler);
+  };
+
+  on("recalc", "click", recalcAll);
+  on("addFlange", "click", () => { addFlange(); });
+  on("removeFlange", "click", () => { removeFlange(); });
+
+  on("useHem", "change", recalcAll);
+  on("hemSide", "change", recalcAll);
+
+  on("exportCross", "click", exportProfileSVG);
+  on("exportFlat", "click", exportFlatSVG);
+  on("exportProd", "click", () => {
+    const report = pricingCtrl?.getReport();
+    exportProductionSVG(buildModel(), report);
+  });
+
+  on("applyFromPoints", "click", () => { applyPointsToProfile(); });
+  on("importToPoints", "click", () => { importProfileToPoints(); });
+  on("clearPoints", "click", () => { clearPoints(); });
+}
 
 function recalcAll() {
   const model = buildModel();
 
-  // 2D
+  // UI sections
+  renderProfileList($("#profileList"));
   drawCross(model, $("#cross"));
   drawFlat(model, $("#flat"));
   renderWidthInfo(model, $("#widthInfo"));
   buildLayoutTable(model, $("#layoutTable"));
 
-  // UI список полок/углов
-  renderProfileList($("#profileList"));
-
-  // ширина → калькулятор цены
-  pricingCtrl?.syncFromModel(model);
+  // sync pricing
+  pricingCtrl?.refreshFromModel();
 
   // 3D
-  const pts = pointsFromLA(model.Ls, model.As, { x: 0, y: 0 })
-    .map(p => ({ x: p.x, y: p.y })); // уже в мм; используется как форма
-  updateProfile3D(pts);
+  const pts = pointsFromLA(model.Ls, model.As, { x: 0, y: 0 });
+  updateProfile3D(pts.map(p => ({ x: p.x, y: p.y })));
 }
 
-function bindUI() {
-  $("#recalc").addEventListener("click", recalcAll);
-  $("#addFlange").addEventListener("click", () => { addFlange(); });
-  $("#removeFlange").addEventListener("click", () => { removeFlange(); });
-
-  $("#useHem").addEventListener("change", recalcAll);
-  $("#hemSide").addEventListener("change", recalcAll);
-
-  // Экспорт
-  $("#exportCross").addEventListener("click", exportProfileSVG);
-  $("#exportFlat").addEventListener("click", exportFlatSVG);
-  $("#exportProd").addEventListener("click", () => {
-    const report = pricingCtrl?.getReport();
-    exportProductionSVG(buildModel(), report);
-  });
-
-  // Редактор по точкам
-  $("#applyFromPoints").addEventListener("click", () => { applyPointsToProfile(); });
-  $("#importToPoints").addEventListener("click", () => { importProfileToPoints(); });
-  $("#clearPoints").addEventListener("click", () => { clearPoints(); });
-}
-
-function init3D() {
-  initViewer($("#viewer3d"));
-}
-
-function initPrice() {
-  pricingCtrl = createPricing(() => buildModel());
-}
-
-function initPoints() {
-  initPointsEditor();
-}
-
-function initialSync() {
-  const model = buildModel();
-  $("#shirina").value = round1(model.width);
-}
-
-function main() {
+function init() {
   bindUI();
-  init3D();
-  initPoints();
-  initPrice();
 
-  onChange(() => recalcAll());
-  initialSync();
+  // Points editor
+  initPointsEditor($("#pointCanvas"), $("#pointsTable"));
+
+  // 3D
+  initViewer($("#viewer3d"));
+
+  // Pricing
+  pricingCtrl = createPricing(() => buildModel());
+
+  // Render initial
   recalcAll();
+
+  // React on model changes
+  onChange(() => recalcAll());
 }
 
-document.addEventListener("DOMContentLoaded", main);
+document.addEventListener("DOMContentLoaded", init);
