@@ -10,16 +10,36 @@ export function createPricing(getModelFn) {
 
   function captureColorOptions() {
     const color = $("#color");
+    if (!color) {
+      console.warn('[pricing] Не найден элемент #color — пропускаю captureColorOptions');
+      colorAllOptions = [];
+      return false;
+    }
     colorAllOptions = Array.from(color.querySelectorAll("option")).map(o => o.cloneNode(true));
+    return true;
   }
 
   function filterColors() {
-    const pokVal = $("#pokritie").value;
     const color = $("#color");
+    const pok = $("#pokritie");
+    if (!color || !pok) {
+      console.warn('[pricing] Нет #color или #pokritie — пропускаю filterColors');
+      return;
+    }
     while (color.firstChild) color.removeChild(color.firstChild);
+
+    // Если опции ещё не захватили — пробуем захватить сейчас
+    if (!colorAllOptions.length) {
+      const ok = captureColorOptions();
+      if (!ok) return;
+    }
+
     const first = colorAllOptions[0].cloneNode(true);
     color.appendChild(first);
+
+    const pokVal = pok.value;
     if (pokVal === "0") return;
+
     colorAllOptions.forEach(opt => {
       const f = opt.getAttribute("data-filter");
       if (f && f === pokVal) color.appendChild(opt.cloneNode(true));
@@ -34,13 +54,13 @@ export function createPricing(getModelFn) {
 
   function currentState() {
     const colorSel = $("#color");
-    const opt = colorSel.selectedOptions[0] || null;
+    const opt = colorSel?.selectedOptions?.[0] || null;
     return {
-      shirina: Number($("#shirina").value || 0),
-      qty: Number($("#kolichestvo").value || 0),
-      dlina: $("#dlina").value,
-      pokritie: $("#pokritie").value,
-      colorValue: colorSel.value,
+      shirina: Number($("#shirina")?.value || 0),
+      qty: Number($("#kolichestvo")?.value || 0),
+      dlina: $("#dlina")?.value || "0",
+      pokritie: $("#pokritie")?.value || "0",
+      colorValue: colorSel?.value || "0",
       colorLabel: opt ? opt.textContent : "",
       mult: PRICE_MULT,
       cat: PRICE_CAT_NAME
@@ -50,6 +70,8 @@ export function createPricing(getModelFn) {
   function recalcPrice() {
     const costEl = $("#cost");
     const infoEl = $("#supplyInfo");
+    if (!costEl || !infoEl) return;
+
     const st = currentState();
 
     if (!st.shirina || !st.qty || st.dlina === "0" || st.pokritie === "0" || st.colorValue === "0" || !st.mult) {
@@ -60,7 +82,7 @@ export function createPricing(getModelFn) {
     }
 
     const sheetWidth = st.dlina === "do1250" ? 2000 : 1250;
-    const basePricePerSheet = Number(st.colorValue); // из option value
+    const basePricePerSheet = Number(st.colorValue);
     const itemsPerSheet = Math.floor(sheetWidth / Math.max(1, Math.floor(st.shirina)));
     if (itemsPerSheet <= 0) {
       costEl.textContent = "ширина изделия превышает ширину листа";
@@ -86,7 +108,7 @@ export function createPricing(getModelFn) {
       pricePerItem,
       category: st.cat,
       lengthKind: st.dlina === "do1250" ? "до 1250 мм" : "1250–2000 мм",
-      coating: $("#pokritie").selectedOptions[0]?.textContent || "",
+      coating: $("#pokritie")?.selectedOptions?.[0]?.textContent || "",
       colorLabel: st.colorLabel,
       qty: st.qty,
       sheetWidth,
@@ -106,7 +128,9 @@ export function createPricing(getModelFn) {
   }
 
   function bind() {
+    // Пытаемся захватить опции, если элемента нет — не падаем
     captureColorOptions();
+
     $("#pokritie")?.addEventListener("change", () => { filterColors(); recalcPrice(); });
     $("#color")?.addEventListener("change", recalcPrice);
     $("#dlina")?.addEventListener("change", recalcPrice);
@@ -118,18 +142,16 @@ export function createPricing(getModelFn) {
       PRICE_CAT_NAME = btn.getAttribute("data-name");
       recalcPrice();
     });
+
+    // Если #color существует и опции уже на месте — сразу отфильтруем
+    if ($("#color")) filterColors();
   }
 
   function getReport() { return lastReport; }
-
-  function refreshFromModel() {
-    setWidthFromModel();
-    recalcPrice();
-  }
+  function refreshFromModel() { setWidthFromModel(); recalcPrice(); }
 
   bind();
   setWidthFromModel();
-  filterColors();
   recalcPrice();
 
   return { recalcPrice, refreshFromModel, getReport };
