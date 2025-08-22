@@ -1,6 +1,6 @@
 // viewer3d.js
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 let renderer, scene, camera, controls, mesh;
 
@@ -45,7 +45,6 @@ export function initViewer(container) {
 
 export function updateProfile3D(points2D) {
   if (!points2D?.length) return;
-  // Строим тонкую экструзию профиля по 2D полилинии
   if (mesh) { scene.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); }
 
   const shape = new THREE.Shape();
@@ -55,9 +54,8 @@ export function updateProfile3D(points2D) {
 
   const extrudeSettings = { depth: 800, bevelEnabled: false, steps: 1 };
   const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  // центрируем по Z и нормализуем масштаб
   geo.translate(0, 0, -extrudeSettings.depth / 2);
-  geo.rotateX(Math.PI); // переворот чтобы оси совпадали визуально
+  geo.rotateX(Math.PI);
 
   const mat = new THREE.MeshStandardMaterial({ color: 0x87d4c4, metalness: 0.15, roughness: 0.7 });
   mesh = new THREE.Mesh(geo, mat);
