@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 let renderer, scene, camera, controls, mesh;
 
 export function initViewer(container) {
+  if (!container) return;
   const w = container.clientWidth || 800;
   const h = container.clientHeight || 480;
 
@@ -44,8 +45,9 @@ export function initViewer(container) {
 }
 
 export function updateProfile3D(points2D) {
+  if (!scene) return;
   if (!points2D?.length) return;
-  if (mesh) { scene.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); }
+  if (mesh) { scene.remove(mesh); mesh.geometry.dispose?.(); mesh.material.dispose?.(); }
 
   const shape = new THREE.Shape();
   const start = points2D[0];
