@@ -1,4 +1,3 @@
-// model.js
 import { $ } from "./utils.js";
 
 const HEM_SIZE = 15;

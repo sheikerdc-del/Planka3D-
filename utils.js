@@ -1,4 +1,3 @@
-// utils.js
 export const $ = (id) => document.getElementById(id);
 export const round1 = (v) => Math.round((Number(v) || 0) * 10) / 10;
 export const round3 = (v) => Math.round((Number(v) || 0) * 1000) / 1000;

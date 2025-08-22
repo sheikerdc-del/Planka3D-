@@ -1,4 +1,3 @@
-// main.js
 import { $, round1 } from "./utils.js";
 import { buildModel, onChange, renderProfileList, addFlange, removeFlange, pointsFromLA } from "./model.js";
 import { drawCross, drawFlat, renderWidthInfo, buildLayoutTable, exportProfileSVG, exportFlatSVG, exportProductionSVG } from "./svgRender.js";
@@ -54,10 +53,10 @@ function init() {
     console.info("[app] init start");
     bindUI();
 
-    initPointsEditor($("#pointCanvas"), $("#pointsTable")); // 2D точки
-    initViewer($("#viewer3d")); // 3D
+    initPointsEditor($("#pointCanvas"), $("#pointsTable"));
+    initViewer($("#viewer3d"));
 
-    pricingCtrl = createPricing(() => buildModel()); // цены
+    pricingCtrl = createPricing(() => buildModel());
 
     recalcAll();
     onChange(() => recalcAll());
@@ -69,7 +68,6 @@ function init() {
   }
 }
 
-// ВАЖНО: если DOM уже готов — запускаем сразу, иначе ждём DOMContentLoaded
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);
 } else {

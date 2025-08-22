@@ -1,5 +1,4 @@
-// svgRender.js
-import { $, round1, round3, svgDownload } from "./utils.js";
+import { $, round1, svgDownload } from "./utils.js";
 import { pointsFromLA } from "./model.js";
 
 export function drawCross(model, svg) {
@@ -7,7 +6,6 @@ export function drawCross(model, svg) {
   while (svg.firstChild) svg.removeChild(svg.firstChild);
   const vbw = svg.viewBox.baseVal.width || 700, vbh = svg.viewBox.baseVal.height || 360, pad = 24;
 
-  // grid
   for (let x = pad; x <= vbw - pad; x += 50) {
     const l = document.createElementNS(svg.namespaceURI, "line");
     l.setAttribute("x1", x); l.setAttribute("y1", pad); l.setAttribute("x2", x); l.setAttribute("y2", vbh - pad);
@@ -112,7 +110,6 @@ export function exportProductionSVG(model, report) {
   title.setAttribute("font-size", "16"); title.setAttribute("font-weight", "700");
   title.textContent = "Чертёж: профиль, раскрой и спецификация"; svg.appendChild(title);
 
-  // Профиль
   const area1 = { x: pad, y: pad + 28, w: 700, h: 340 };
   const border1 = document.createElementNS(svgNS, "rect");
   border1.setAttribute("x", area1.x); border1.setAttribute("y", area1.y);
@@ -148,7 +145,6 @@ export function exportProductionSVG(model, report) {
     }
   }
 
-  // Полоса
   const area2 = { x: pad + area1.w + 20, y: area1.y, w: w - (pad + area1.w + 20) - pad, h: area1.h };
   const border2 = document.createElementNS(svgNS, "rect");
   border2.setAttribute("x", area2.x); border2.setAttribute("y", area2.y);
@@ -171,65 +167,6 @@ export function exportProductionSVG(model, report) {
   label2.setAttribute("x", left2 + 6); label2.setAttribute("y", top2 - 8); label2.setAttribute("font-size", "12");
   label2.textContent = `Полоса: 2000 × ${round1(model.width)} мм`;
   svg.appendChild(label2);
-
-  // Таблица
-  const area3 = { x: pad, y: area1.y + area1.h + 20, w: w - 2 * pad, h: h - (area1.y + area1.h + 20) - pad };
-  const rows = [
-    ["Параметр", "Значение"],
-    ["Ширина Σ", `${round1(report.widthSigma)} мм`],
-    ["Цена/шт", `${report.pricePerItem} руб. (кат. ${report.category})`],
-    ["Длина изделия", report.lengthKind],
-    ["Покрытие", report.coating],
-    ["Цвет", report.colorLabel || "—"],
-    ["Кол-во", `${report.qty} шт`],
-    ["Ширина листа", `${report.sheetWidth} мм`],
-    ["Изделий с листа", `${report.itemsPerSheet} шт`],
-    ["Полных листов", `${report.fullSheets} шт`],
-    ["Использование последнего листа", `${round1(report.lastSheetUsed)} мм`],
-    ["Остаток последнего", `${round1(report.leftoverOnLast)} мм`],
-    ["Мусор", `${round1(report.leftoverWaste)} мм`],
-    ...(report.stdPlanks?.qty?.length
-      ? [["Стандартные планки из остатка", `${round3(report.stdPlanksSheets)} лист.`], ...report.stdPlanks.qty.map((q, i) => [report.stdPlanks.names[i] || `Планка ${i + 1}`, `${q} шт`])]
-      : []),
-    ["Листы на нестандарт", `${round3(report.sheetsForNonStd)} шт`],
-    ["Всего листов", `${round3(report.sheetsTotal)} шт`]
-  ];
-
-  const rowH = 26, colW = [220, area3.w - 220];
-  const tableH = rowH * rows.length;
-
-  const tableRect = document.createElementNS(svgNS, "rect");
-  tableRect.setAttribute("x", area3.x); tableRect.setAttribute("y", area3.y);
-  tableRect.setAttribute("width", area3.w); tableRect.setAttribute("height", tableH);
-  tableRect.setAttribute("fill", "#ffffff"); tableRect.setAttribute("stroke", "#1a2c5a"); tableRect.setAttribute("stroke-width", "1");
-  svg.appendChild(tableRect);
-
-  for (let i = 1; i < rows.length; i++) {
-    const y = area3.y + i * rowH;
-    const ln = document.createElementNS(svgNS, "line");
-    ln.setAttribute("x1", area3.x); ln.setAttribute("y1", y);
-    ln.setAttribute("x2", area3.x + area3.w); ln.setAttribute("y2", y);
-    ln.setAttribute("stroke", "#c0c7dd"); ln.setAttribute("stroke-width", "1");
-    svg.appendChild(ln);
-  }
-  const vline = document.createElementNS(svgNS, "line");
-  vline.setAttribute("x1", area3.x + colW[0]); vline.setAttribute("y1", area3.y);
-  vline.setAttribute("x2", area3.x + colW[0]); vline.setAttribute("y2", area3.y + tableH);
-  vline.setAttribute("stroke", "#c0c7dd"); vline.setAttribute("stroke-width", "1");
-  svg.appendChild(vline);
-
-  rows.forEach((r, i) => {
-    const y = area3.y + i * rowH + 18;
-    const t1 = document.createElementNS(svgNS, "text");
-    t1.setAttribute("x", area3.x + 10); t1.setAttribute("y", y);
-    t1.setAttribute("font-size", i === 0 ? "14" : "13"); t1.setAttribute("font-weight", i === 0 ? "700" : "400");
-    t1.textContent = r[0]; svg.appendChild(t1);
-
-    const t2 = document.createElementNS(svgNS, "text");
-    t2.setAttribute("x", area3.x + colW[0] + 10); t2.setAttribute("y", y);
-    t2.setAttribute("font-size", i === 0 ? "14" : "13"); t2.setAttribute("font-weight", i === 0 ? "700" : "400");
-    t2.textContent = String(r[1]); svg.appendChild(t2);
-  });
 
   const src = new XMLSerializer().serializeToString(svg);
   const blob = new Blob([src], { type: "image/svg+xml;charset=utf-8" });

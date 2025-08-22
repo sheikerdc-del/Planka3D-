@@ -1,4 +1,3 @@
-// pointsEditor.js
 import { $, clientToSVG, round1 } from "./utils.js";
 import { getLA, setLA, pointsFromLA } from "./model.js";
 
@@ -62,7 +61,6 @@ function render() {
   while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
   const pad = 10, vbw = svgEl.viewBox.baseVal.width || 800, vbh = svgEl.viewBox.baseVal.height || 360;
 
-  // axes
   const ax = document.createElementNS(svgEl.namespaceURI, "line");
   ax.setAttribute("x1", pad); ax.setAttribute("y1", vbh - pad);
   ax.setAttribute("x2", vbw - pad); ax.setAttribute("y2", vbh - pad);
@@ -126,7 +124,6 @@ export function applyPointsToProfile() {
 
 export function importProfileToPoints() {
   const { Ls, As } = getLA();
-  // Строим точки в «нижнем-левом» старте окна
   const raw = pointsFromLA(Ls, As, { x: 40, y: (svgEl?.viewBox.baseVal.height || 360) - 40 });
   state.points = raw;
   render();

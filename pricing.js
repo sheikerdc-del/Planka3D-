@@ -1,4 +1,3 @@
-// pricing.js
 import { $, round1 } from "./utils.js";
 
 export function createPricing(getModelFn) {
@@ -28,7 +27,6 @@ export function createPricing(getModelFn) {
     }
     while (color.firstChild) color.removeChild(color.firstChild);
 
-    // Если опции ещё не захватили — пробуем захватить сейчас
     if (!colorAllOptions.length) {
       const ok = captureColorOptions();
       if (!ok) return;
@@ -128,9 +126,7 @@ export function createPricing(getModelFn) {
   }
 
   function bind() {
-    // Пытаемся захватить опции, если элемента нет — не падаем
     captureColorOptions();
-
     $("#pokritie")?.addEventListener("change", () => { filterColors(); recalcPrice(); });
     $("#color")?.addEventListener("change", recalcPrice);
     $("#dlina")?.addEventListener("change", recalcPrice);
@@ -143,7 +139,6 @@ export function createPricing(getModelFn) {
       recalcPrice();
     });
 
-    // Если #color существует и опции уже на месте — сразу отфильтруем
     if ($("#color")) filterColors();
   }
 
