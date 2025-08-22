@@ -16,6 +16,8 @@ export function svgDownload(name, svgEl) {
   const src = new XMLSerializer().serializeToString(svgEl);
   const blob = new Blob([src], { type: "image/svg+xml;charset=utf-8" });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
