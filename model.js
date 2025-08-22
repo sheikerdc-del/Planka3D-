@@ -23,6 +23,7 @@ export function updateA(i, v) {
 }
 export function addFlange() { Ls.push(10); if (Ls.length > 1) As.push(0); emit(); }
 export function removeFlange() { if (Ls.length > 0) Ls.pop(); As = As.slice(0, Math.max(0, Ls.length - 1)); emit(); }
+
 export function onChange(cb) { listeners.add(cb); }
 export function offChange(cb) { listeners.delete(cb); }
 function emit() { listeners.forEach(cb => cb(buildModel())); }
@@ -71,6 +72,7 @@ export function buildModel() {
 
 export function renderProfileList(container) {
   const model = buildModel();
+  if (!container) return;
   container.innerHTML = "";
   const table = document.createElement("table");
   table.innerHTML = `
@@ -104,6 +106,7 @@ export function renderProfileList(container) {
     tb.appendChild(tr);
   }
   container.appendChild(table);
+
   const countInfo = document.getElementById("countInfo");
   if (countInfo) countInfo.textContent = `Полок: ${model.Ls.length} | Линий гиба: ${Math.max(0, model.Ls.length - 1)}`;
 }
