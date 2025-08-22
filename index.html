@@ -1,10 +1,21 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 rx=%223%22 fill=%22%230b132b%22/><path d=%22M3 11L8 3l5 8H3z%22 fill=%22%235bc0be%22/></svg>">
   <meta charset="utf-8" />
   <title>Планка — профиль, стоимость, 3D (ES Modules)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 rx=%223%22 fill=%22%230b132b%22/><path d=%22M3 11L8 3l5 8H3z%22 fill=%22%235bc0be%22/></svg>">
+
+  <!-- Import Map для three и addons -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
   <style>
     :root {
       --bg:#0b132b; --card:#111833; --muted:#aeb6c7; --line:#2a3558; --text:#f3f4f7; --accent:#5bc0be; --ink:#0b1020; --paper:#fff;
@@ -179,29 +190,29 @@
             <option data-filter="12" value="2225" data-cvet="любой">любой</option>
             <option data-filter="13" value="2562.5" data-cvet="любой">любой</option>
             <option data-filter="14" value="1965" data-cvet="любой">любой</option>
-            <option data-filter="15" value="1757.5" data-cvet="любой">любой</option>
-            <option data-filter="16" value="1640" data-cvet="любой">любой</option>
-            <option data-filter="17" value="1697.5" data-cvet="любой">любой</option>
-            <option data-filter="18" value="2992.5" data-cvet="любой">любой</option>
-            <option data-filter="19" value="3395" data-cvet="любой">любой</option>
-            <option data-filter="20" value="3395" data-cvet="любой">любой</option>
-            <option data-filter="21" value="2422.5" data-cvet="любой">любой</option>
-            <option data-filter="22" value="2422.5" data-cvet="любой">любой</option>
-            <option data-filter="23" value="2350" data-cvet="любой">любой</option>
-            <option data-filter="24" value="2350" data-cvet="любой">любой</option>
-            <option data-filter="25" value="2350" data-cvet="любой">любой</option>
-            <option data-filter="27" value="2802.5" data-cvet="любой">любой</option>
-            <option data-filter="28" value="2360" data-cvet="любой">любой</option>
-            <option data-filter="29" value="2680" data-cvet="любой">любой</option>
-            <option data-filter="30" value="2242.5" data-cvet="любой">любой</option>
-            <option data-filter="33" value="2047.5" data-cvet="любой">любой</option>
-            <option data-filter="34" value="2535" data-cvet="любой">любой</option>
-            <option data-filter="35" value="1860" data-cvet="любой">любой</option>
-            <option data-filter="36" value="1757.5" data-cvet="любой">любой</option>
-            <option data-filter="37" value="4322.5" data-cvet="любой">любой</option>
-            <option data-filter="38" value="4490" data-cvet="любой">любой</option>
-            <option data-filter="39" value="3050" data-cvet="любой">любой</option>
-            <option data-filter="40" value="1722.5" data-cvet="любой">любой</option>
+            <option data-filter="15" value="1757.5" data-cвет="любой">любой</option>
+            <option data-filter="16" value="1640" data-cвет="любой">любой</option>
+            <option data-filter="17" value="1697.5" data-cвет="любой">любой</option>
+            <option data-filter="18" value="2992.5" data-cвет="любой">любой</option>
+            <option data-filter="19" value="3395" data-cвет="любой">любой</option>
+            <option data-filter="20" value="3395" data-cвет="любой">любой</option>
+            <option data-filter="21" value="2422.5" data-cвет="любой">любой</option>
+            <option data-filter="22" value="2422.5" data-cвет="любой">любой</option>
+            <option data-filter="23" value="2350" data-cвет="любой">любой</option>
+            <option data-filter="24" value="2350" data-cвет="любой">любой</option>
+            <option data-filter="25" value="2350" data-cвет="любой">любой</option>
+            <option data-filter="27" value="2802.5" data-cвет="любой">любой</option>
+            <option data-filter="28" value="2360" data-cвет="любой">любой</option>
+            <option data-filter="29" value="2680" data-cвет="любой">любой</option>
+            <option data-filter="30" value="2242.5" data-cвет="любой">любой</option>
+            <option data-filter="33" value="2047.5" data-cвет="любой">любой</option>
+            <option data-filter="34" value="2535" data-cвет="любой">любой</option>
+            <option data-filter="35" value="1860" data-cвет="любой">любой</option>
+            <option data-filter="36" value="1757.5" data-cвет="любой">любой</option>
+            <option data-filter="37" value="4322.5" data-cвет="любой">любой</option>
+            <option data-filter="38" value="4490" data-cвет="любой">любой</option>
+            <option data-filter="39" value="3050" data-cвет="любой">любой</option>
+            <option data-filter="40" value="1722.5" data-cвет="любой">любой</option>
           </select>
         </div>
       </div>
@@ -261,16 +272,8 @@
     </div>
 
   </div>
-  
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-  <!-- Модуль приложения -->
+
+  <!-- Приложение (должно лежать рядом с index.html и всеми *.js) -->
   <script type="module" src="./main.js"></script>
 </body>
 </html>
